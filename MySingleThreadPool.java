@@ -32,8 +32,7 @@ public class MySingleThreadPool {
                     start();
                     break;
                 case 2:
-                    MyRunnable myRunnable = new MyRunnable();
-                    submit(myRunnable);
+                    submit(new MyRunnable());
                     break;
                 case 3:
                     stop();
