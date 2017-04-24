@@ -60,25 +60,26 @@ public class MySingleThreadPool {
         interruptedOneDone = false;
         interruptedAllDone = false;
 
-        new Thread(new Runnable() {
+        final Thread thread = new Thread(new Runnable() {
             public void run() {
                 while (!interruptedOneDone) {
                     if (interruptedAllDone) {
-                        for (int i = 0; i < myRunnables.size(); i++) {
-                            System.out.println("Работает цикл на довыполнение задач");
-                            task = myRunnables.poll();
+//                        for (int i = 0; i < myRunnables.size(); i++) {
+                        while ((task = myRunnables.poll()) != null) {
+                            System.out.println("Работает цикл на довыполнение задач |" + " размер очереди: " + myRunnables.size());
                             task.run();
                         }
                         terminate();
                     } else {
                         if ((task = myRunnables.poll()) != null) {
-                            System.out.println("Работает основной цикл задач");
+                            System.out.println("Работает основной цикл задач |" + " размер очереди: " + myRunnables.size());
                             task.run();
                         }
                     }
                 }
             }
-        }).start();
+        });
+        thread.start();
     }
 
     public void terminate() {
