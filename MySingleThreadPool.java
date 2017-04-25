@@ -5,7 +5,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class MySingleThreadPool {
-    private BlockingQueue<MyRunnable> myRunnables = new ArrayBlockingQueue<MyRunnable>(100);
+    private BlockingQueue<MyRunnable> myRunnables = new ArrayBlockingQueue<MyRunnable>(1000);
     private Runnable task;
     private boolean interruptedOneDone = false;
     private boolean interruptedAllDone = false;
@@ -48,10 +48,13 @@ public class MySingleThreadPool {
     }
 
     public void submit(MyRunnable myRunnable) {
-        try {
-            myRunnables.put(myRunnable);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        synchronized (myRunnables) {
+            try {
+                myRunnables.put(myRunnable);
+                myRunnables.notifyAll();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -59,26 +62,33 @@ public class MySingleThreadPool {
         interruptedOneDone = false;
         interruptedAllDone = false;
 
-        final Thread thread = new Thread(new Runnable() {
+         new Thread(new Runnable() {
             public void run() {
                 while (!interruptedOneDone) {
+                    synchronized (myRunnables) {
+                        while (myRunnables.size() == 0) {
+                            try {
+                                myRunnables.wait();
+                            } catch (InterruptedException e) {
+                                break;
+                            }
+                        }
+                    }
                     if (interruptedAllDone) {
-//                        for (int i = 0; i < myRunnables.size(); i++) {
                         while ((task = myRunnables.poll()) != null) {
-                            System.out.println("Работает цикл на довыполнение задач |" + " размер очереди: " + myRunnables.size());
+                            System.out.println("Работает цикл на довыполнение задач |" + " осталось в очереди: " + myRunnables.size());
                             task.run();
                         }
                         terminate();
                     } else {
                         if ((task = myRunnables.poll()) != null) {
-                            System.out.println("Работает основной цикл задач |" + " размер очереди: " + myRunnables.size());
+                            System.out.println("Работает основной цикл задач |" + " осталось в очереди: " + myRunnables.size());
                             task.run();
                         }
                     }
                 }
             }
-        });
-        thread.start();
+        }).start();
     }
 
     public void terminate() {
