@@ -1,68 +1,61 @@
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class SingleThreadPool {
-    private BlockingQueue<Runnable> runnables = new ArrayBlockingQueue<Runnable>(1000);
+    private BlockingQueue<Runnable> tasks = new ArrayBlockingQueue<Runnable>(10000);
+    private Thread thread;
     private Runnable task;
-    private Thread threadPool;
-    private boolean terminate = false;
-
-
-    public void submit(MyRunnable myRunnable) {
-        System.out.println("Зашли в submit на synchronized");
-        synchronized (runnables) {
-            try {
-                runnables.put(myRunnable);
-                System.out.println("Задача добавлена");
-                runnables.notifyAll();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    private boolean addPermission = true;
 
     public void start() {
-        threadPool = new Thread(new Runnable() {
+        thread = new Thread(new Runnable() {
             public void run() {
-                while (!Thread.interrupted()) {
-                    synchronized (runnables) {
-                        while (runnables.size() == 0) {
+                while (thread != null) {
+                    if (!addPermission && tasks.size() == 0) {
+                        terminate();
+                    }
+                    synchronized (tasks) {
+                        while (tasks.isEmpty()) {
                             try {
-                                runnables.wait();
+                                tasks.wait();
                             } catch (InterruptedException e) {
                                 break;
                             }
                         }
                     }
-                    if ((task = runnables.poll()) != null && !terminate) {
-                        //нет никаких прерываний - спокойно выполняем все таски
+                    if ((task = tasks.poll()) != null) {
                         task.run();
-                    } else if ((task = runnables.poll()) != null && terminate) {
-                        //сработал terminate() выполняем только последнюю таску
-                        task.run();
-                        break;
-                    } else if ((task = runnables.poll()) == null && terminate) {
-                        //сработал terminate() и нет тасок - просто выходим из цикла
-                        break;
-                    } else {
-                        break;
+                        System.out.println("Size of queue: " + tasks.size());
                     }
                 }
             }
         });
-        threadPool.start();
+        thread.start();
+    }
+
+    public void submit(Runnable task, String threadName) {
+        synchronized (tasks) {
+            if (addPermission) {
+                tasks.add(task);
+                tasks.notify();
+                System.out.println(threadName + " added new task!");
+            }
+        }
     }
 
     public void terminate() {
-        System.out.println("Зашли в terminate()");
-        stop();
-        terminate = true;
-        System.out.println("terminate() завершен");
+        if (thread != null) {
+            Thread stub = thread;
+            thread = null;
+            stub.interrupt();
+            addPermission = false;
+            System.out.println("|TERMINATE|TERMINATE|TERMINATE|TERMINATE|TERMINATE|");
+        }
     }
 
     public void stop() {
-        System.out.println("Зашли в stop->interrupt()");
-        threadPool.interrupt();
-        System.out.println("stop->interrupt() завершен");
+        addPermission = false;
+        System.out.println("|--STOP--|--STOP--|--STOP--|--STOP--|--STOP--|");
     }
 }

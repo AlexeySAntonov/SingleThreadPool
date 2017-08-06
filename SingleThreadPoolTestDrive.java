@@ -1,40 +1,41 @@
+
 public class SingleThreadPoolTestDrive {
 
     public static void main(String[] args) {
         final SingleThreadPool singleThreadPool = new SingleThreadPool();
-
-        //Запуск фонового потока
         singleThreadPool.start();
 
         new Thread(new Runnable() {
             public void run() {
-                //Добавление в цикле 10 задач в фоновый поток из Thread-1
-                for (int i = 0; i < 10; i++) {
-                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()));
+                for (int i = 0; i < 100; i++) {
+                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()), Thread.currentThread().getName());
                 }
             }
         }).start();
 
         new Thread(new Runnable() {
             public void run() {
-                //Добавление в цикле 10 задач в фоновый поток из Thread-2
-                for (int i = 0; i < 10; i++) {
-                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()));
+                for (int i = 0; i < 100; i++) {
+                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()), Thread.currentThread().getName());
                 }
             }
         }).start();
 
         new Thread(new Runnable() {
             public void run() {
-                //Добавление в цикле 10 задач в фоновый поток из Thread-3
-                for (int i = 0; i < 10; i++) {
-                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()));
+                for (int i = 0; i < 100; i++) {
+                    singleThreadPool.submit(new MyRunnable(Thread.currentThread().getName()), Thread.currentThread().getName());
                 }
             }
         }).start();
 
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-//        singleThreadPool.stop();
-        singleThreadPool.terminate();
+//        singleThreadPool.terminate();
+        singleThreadPool.stop();
     }
 }
