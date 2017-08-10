@@ -44,7 +44,7 @@ public class SingleThreadPool {
         }
     }
 
-    public void terminate() {
+    public synchronized void terminate() {
         if (thread != null) {
             Thread stub = thread;
             thread = null;
@@ -54,7 +54,7 @@ public class SingleThreadPool {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         addPermission = false;
         System.out.println("|--STOP--|--STOP--|--STOP--|--STOP--|--STOP--|");
     }

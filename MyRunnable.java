@@ -1,6 +1,8 @@
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class MyRunnable implements Runnable {
-    private static int taskCount = 0;
-    private final int id = taskCount++;
+    private static AtomicInteger taskCount = new AtomicInteger(0);
+    private final int id = taskCount.incrementAndGet();
     private String parentThreadName;
 
 

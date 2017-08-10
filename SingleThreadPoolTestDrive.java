@@ -30,12 +30,12 @@ public class SingleThreadPoolTestDrive {
         }).start();
 
         try {
-            Thread.sleep(5);
+            Thread.sleep(7);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-//        singleThreadPool.terminate();
-        singleThreadPool.stop();
+        singleThreadPool.terminate();
+//        singleThreadPool.stop();
     }
 }
